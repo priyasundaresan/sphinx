@@ -80,6 +80,7 @@ In sim, we provide a script to allow you to try waypoint-mode data collection fo
 source set_env.sh
 python interactive_scripts/record_sim.py
 ```
+![Interface Demo](assets/interface.gif)
 
 ## Real Deployment
 As always:
