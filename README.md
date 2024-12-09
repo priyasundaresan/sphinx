@@ -32,7 +32,7 @@ Remember to run `source set_env.sh`  once per shell before running any script fr
 
 ### Download data
 
-Download the `can` and `square` datasets from [Google Drive](#todo) and put them under the `data` folder.
+Download the `can` and `square` datasets from [Google Drive](#todo) and put them under the `data` folder. (i.e. you should have `data/square` and `data/can`).
 
 ### Robomimic Square and Can
 
@@ -124,7 +124,7 @@ python interactive_scripts/record_demo.py
 
 #### Training
 To train SPHINX on a given task (i.e. coffee)
-Download the coffee dataset from [Google Drive](#todo) and put it under the `data` folder.
+Download the coffee dataset from [Google Drive](#todo) and put it under the `data` folder (i.e. you should have `data/coffee`).
 ```shell
 python scripts/train_waypoint.py --config cfgs/waypoint/coffee.yaml
 python scripts/train_dense.py --config cfgs/dense/dp_coffee.yaml
