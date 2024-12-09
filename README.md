@@ -2,7 +2,7 @@
 
 Implementation of _What's the Move? Hybrid Imitation Learning via Salient Points_ (SPHINX) and baselines on Robomimic and real-world tasks.
 
-[![Paper](https://img.shields.io/badge/Paper-%20%F0%9F%93%84-blue)](https://sphinx-manip.github.io/)
+[![Paper](https://img.shields.io/badge/Paper-%20%F0%9F%93%84-blue)](https://sphinx-manip.github.io/assets/sphinx.pdf)
 [![Website](https://img.shields.io/badge/Website-%F0%9F%8C%90-orange)](https://sphinx-manip.github.io/)
 
 ## Clone and create Python environment
@@ -32,7 +32,7 @@ Remember to run `source set_env.sh`  once per shell before running any script fr
 
 ### Download data
 
-Download the `can` and `square` datasets from [Google Drive](#todo) and put them under the `data` folder. (i.e. you should have `data/square` and `data/can`).
+Download the `can` and `square` datasets from [Google Drive](https://drive.google.com/drive/folders/1283M3vPEYml87Y-N8Ievvv3XAVt7iHu6?usp=sharing) and put them under the `data` folder. (i.e. you should have `data/square` and `data/can`).
 
 ### Robomimic Square and Can
 
@@ -75,7 +75,7 @@ python scripts/train_dp3.py --config_path cfgs/dense/dp3_<square/can>.yaml
 ## Try the SPHINX Data Collection UI in Sim
 (NOTE: We provide a mac_env.yml if you'd like to create a Mac-compatible environment to run our data collection interface)
 
-In sim, we provide a script to allow you to try waypoint-mode data collection for the RoboMimic can/square environments (square by default). This is what was used to collect the provided `square` and `can` datasets. See this [Google Doc]() for some tips and tricks on how to use the UI.
+In sim, we provide a script to allow you to try waypoint-mode data collection for the RoboMimic can/square environments (square by default). This is what was used to collect the provided `square` and `can` datasets. See this [Google Doc](https://docs.google.com/document/d/1mpHAVoCbp7k2y1qc_WS0c4HW7EAOpovFvp6tYPP46hI/edit?usp=sharing) for a walkthrough on how to use the UI.
 ```shell
 source set_env.sh
 python interactive_scripts/record_sim.py
@@ -124,7 +124,7 @@ python interactive_scripts/record_demo.py
 
 #### Training
 To train SPHINX on a given task (i.e. coffee)
-Download the coffee dataset from [Google Drive](#todo) and put it under the `data` folder (i.e. you should have `data/coffee`).
+Download the coffee dataset from [Google Drive](https://drive.google.com/drive/folders/1283M3vPEYml87Y-N8Ievvv3XAVt7iHu6?usp=sharing) and put it under the `data` folder (i.e. you should have `data/coffee`).
 ```shell
 python scripts/train_waypoint.py --config cfgs/waypoint/coffee.yaml
 python scripts/train_dense.py --config cfgs/dense/dp_coffee.yaml
