@@ -1,0 +1,16 @@
+dataset:
+  path: can
+  is_sim: 1
+dp:
+  shift_pad: 6
+norm_action: 0
+num_epoch: 10
+epoch_len: 25000
+use_ema: 1
+ema_tau: 0.01
+batch_size: 64
+lr: 1e-4
+weight_decay: 1e-6
+cosine_schedule: 1
+lr_warm_up_steps: 500
+use_wb: 1

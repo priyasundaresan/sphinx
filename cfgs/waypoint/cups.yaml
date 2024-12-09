@@ -1,0 +1,20 @@
+dataset:
+  is_real: 1
+  path: cups
+  repeat: 20
+  use_dist: 1
+  aug_translate: 1
+  aug_interpolate: 0.2
+epoch: 100
+save_per: 20
+train_split: all
+num_workers: 2
+waypoint:
+  num_layer: 6
+  custom_init: 0
+  drop: 0.1
+  topk_train: 0
+batch_size: 64
+cosine_schedule: 1
+use_wb: 1
+use_ema: 1

@@ -1,14 +1,17 @@
 dataset:
-  path: cups2
-  camera_views: agent1_image+agent2_image+wrist_image
+  path: data/square
+  camera_views: agentview_image+robot0_eye_in_hand_image
+  predict_mode: 0
 dp:
   shift_pad: 6
   cond_unet:
     kernel_size: 5
-    use_prop: 0
+    use_prop: 1
   use_ddpm: 0
-num_epoch: 10
-epoch_len: 10000
+is_sim: 1
+norm_action: 0
+num_epoch: 5
+epoch_len: 50000
 use_ema: 1
 ema_tau: 0.01
 batch_size: 64
@@ -17,4 +20,3 @@ weight_decay: 1e-6
 cosine_schedule: 1
 lr_warm_up_steps: 500
 use_wb: 1
-save_dir: exps/hydra/cups2

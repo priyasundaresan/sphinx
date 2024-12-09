@@ -39,15 +39,12 @@ Batch = namedtuple("Batch", ["obs", "action"])
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 DATASETS = {
-    "gloves": os.path.join(PROJECT_ROOT, "data/dev_gloves"),
-    "clothhang": os.path.join(PROJECT_ROOT, "data/dev_clothhang"),
-    "pills": os.path.join(PROJECT_ROOT, "data/dev_pills"),
-    "open": os.path.join(PROJECT_ROOT, "data/dev_open"),
-    "cups2": os.path.join(PROJECT_ROOT, "data/cups2"),
-    "square3": os.path.join(PROJECT_ROOT, "data/square3"),
-    "can_crop1": os.path.join(PROJECT_ROOT, "data/can_crop1"),
-    "drawer_new": os.path.join(PROJECT_ROOT, "data/drawer_new"),
-    "coffee1": os.path.join(PROJECT_ROOT, "data/coffee1"),
+    "square": os.path.join(PROJECT_ROOT, "data/square"),
+    "can": os.path.join(PROJECT_ROOT, "data/can"),
+    "coffee": os.path.join(PROJECT_ROOT, "data/coffee"),
+    "drawer": os.path.join(PROJECT_ROOT, "data/drawer"),
+    "cups": os.path.join(PROJECT_ROOT, "data/cups"),
+    "trainbridge": os.path.join(PROJECT_ROOT, "data/trainbridge"),
 }
 
 

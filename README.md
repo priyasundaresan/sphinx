@@ -1,6 +1,6 @@
 # SPHINX
 
-Implementation of _What's the Move? Hybrid Imitation Learning via Salient Points_ and baselines on Robomimic and real-world tasks.
+Implementation of _What's the Move? Hybrid Imitation Learning via Salient Points_ (SPHINX) and baselines on Robomimic and real-world tasks.
 
 [![Paper](https://img.shields.io/badge/Paper-%20%F0%9F%93%84-blue)](https://sphinx-manip.github.io/)
 [![Website](https://img.shields.io/badge/Website-%F0%9F%8C%90-orange)](https://sphinx-manip.github.io/)
@@ -32,7 +32,7 @@ Remember to run `source set_env.sh`  once per shell before running any script fr
 
 ### Download data
 
-Download dataset and models from [Google Drive](#todo) and put them under the `data` folder.
+Download the `can` and `square` datasets from [Google Drive](#todo) and put them under the `data` folder.
 
 ### Robomimic Square and Can
 
@@ -65,11 +65,11 @@ python scripts/train_waypoint.py --config_path cfgs/waypoint/<square/can>_vanill
 #### Diffusion Policies
 To train the image-based Diffusion Policy:
 ```shell
-python scripts/train_dense.py --config_path cfgs/dense/<square/can>_dp.yaml
+python scripts/train_dense.py --config_path cfgs/dense/dp_<square/can>.yaml
 ```
 To train the point-cloud based Diffusion Policy:
 ```shell
-python scripts/train_dp3.py --config_path cfgs/dense/<square/can>_dp3.yaml
+python scripts/train_dp3.py --config_path cfgs/dense/dp3_<square/can>.yaml
 ```
 
 ## Try the SPHINX Data Collection UI in Sim
@@ -121,13 +121,16 @@ python interactive_scripts/record_demo.py
 ```
 
 ### Training/Evaling SPHINX
-#### SPHINX
-To train SPHINX on coffee (as an example, we use the same procedure for other real tasks):
+
+#### Training
+To train SPHINX on a given task (i.e. coffee)
+Download the coffee dataset from [Google Drive](#todo) and put it under the `data` folder.
 ```shell
 python scripts/train_waypoint.py --config cfgs/waypoint/coffee.yaml
-python scripts/train_dense.py --config cfgs/dense/coffee.yaml
+python scripts/train_dense.py --config cfgs/dense/dp_coffee.yaml
 ```
 
+#### Eval
 Assuming the resulting checkpoints are saved to `exps/dense/coffee` and `exps/waypoint/coffee`, to eval SPHINX:
 ```shell
 python scripts/eval_sphinx.py --dense_weight exps/dense/coffee --waypoint_weight exps/waypoint/coffee --env_cfg_path envs/fr3.yaml --freq 10

@@ -1,5 +1,5 @@
 dataset:
-  path: data/drawer
+  path: data/trainbridge
   camera_views: wrist_image+agent1_image+agent2_image
   predict_mode: 0
 dp:

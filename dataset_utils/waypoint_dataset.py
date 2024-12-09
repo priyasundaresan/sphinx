@@ -195,9 +195,12 @@ class PointCloudDatasetConfig:
     def __post_init__(self):
         PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
         DATASETS = {
-            "square3": os.path.join(PROJECT_ROOT, "data/square3"),
-            "can_crop1": os.path.join(PROJECT_ROOT, "data/can_crop1"),
-            "coffee1": os.path.join(PROJECT_ROOT, "data/coffee1"),
+            "square": os.path.join(PROJECT_ROOT, "data/square"),
+            "can": os.path.join(PROJECT_ROOT, "data/can"),
+            "coffee": os.path.join(PROJECT_ROOT, "data/coffee"),
+            "drawer": os.path.join(PROJECT_ROOT, "data/drawer"),
+            "cups": os.path.join(PROJECT_ROOT, "data/cups"),
+            "trainbridge": os.path.join(PROJECT_ROOT, "data/trainbridge"),
         }
         if self.path in DATASETS:
             self.path = DATASETS[self.path]

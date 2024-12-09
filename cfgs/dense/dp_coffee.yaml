@@ -1,6 +1,6 @@
 dataset:
-  path: data/square3
-  camera_views: agentview_image+robot0_eye_in_hand_image
+  path: data/coffee
+  camera_views: wrist_image+agent1_image+agent2_image
   predict_mode: 0
 dp:
   shift_pad: 6
@@ -8,8 +8,6 @@ dp:
     kernel_size: 5
     use_prop: 1
   use_ddpm: 0
-is_sim: 1
-norm_action: 0
 num_epoch: 5
 epoch_len: 50000
 use_ema: 1

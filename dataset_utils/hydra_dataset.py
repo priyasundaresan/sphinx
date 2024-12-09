@@ -50,6 +50,11 @@ class HydraDatasetConfig:
     image_size: int = 96
 
     def __post_init__(self):
+        DATASETS = {
+            "coffee": os.path.join(PROJECT_ROOT, "data/coffee"),
+            "cups": os.path.join(PROJECT_ROOT, "data/cups"),
+            "trainbridge": os.path.join(PROJECT_ROOT, "data/trainbridge"),
+        }
         if self.path in DATASETS:
             self.path = DATASETS[self.path]
 
