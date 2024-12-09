@@ -1,0 +1,5 @@
+cpus: 12
+mem: 60gb
+gpus: 1
+exclude: iliad1,iliad2,iliad3,iliad4,iliad6,iliad8,iliad9
+time: 7200

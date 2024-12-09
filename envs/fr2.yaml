@@ -1,0 +1,20 @@
+cameras:
+  - name: agent1
+    serial_number: "042222070680"
+    width: 640
+    height: 480
+    use_depth: True
+  - name: agent2
+    serial_number: "141222070993"
+    width: 640
+    height: 480
+    use_depth: True
+  - name: wrist
+    serial_number: "241222076578"
+    width: 640
+    height: 480
+    use_depth: False
+controller:
+  server_ip: "tcp://172.16.0.1:4242"
+parallel_camera: 1
+depth_anything: 1

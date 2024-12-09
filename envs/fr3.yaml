@@ -1,0 +1,26 @@
+cameras:
+  - name: agent1
+    serial_number: "752112070598"
+    width: 640
+    height: 480
+    use_depth: True
+    exposure: 120
+  - name: agent2
+    serial_number: "832112071449"
+    width: 640
+    height: 480
+    use_depth: True
+    exposure: 100
+  - name: wrist
+    serial_number: "838212072814"
+    width: 640
+    height: 480
+    use_depth: False
+controller:
+  server_ip: "tcp://172.16.0.1:4242"
+parallel_camera: 1
+depth_anything: 0
+min_bound: [0.35, -0.24, 0.04]
+max_bound: [0.85, 0.24, 0.5]
+calib: calibration_files/short_cams
+

@@ -1,0 +1,5 @@
+cpus: 12
+mem: 50gb
+gpus: 1
+gpu_type: a40
+time: 7200

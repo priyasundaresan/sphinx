@@ -1,0 +1,18 @@
+cameras:
+  - name: agent1
+    serial_number: "042222070680"
+    width: 640
+    height: 480
+    use_depth: True
+  - name: agent2
+    serial_number: "141222070993"
+    width: 640
+    height: 480
+    use_depth: True
+  - name: wrist
+    serial_number: "241222076578"
+    width: 640
+    height: 480
+    use_depth: False
+parallel_camera: 1
+show_camera: 1

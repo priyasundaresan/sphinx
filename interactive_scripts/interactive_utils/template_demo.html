@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Object Manipulation</title>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: white; } /* Set background color to white */
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<style>
+  #keypress-display {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #333;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  #recordedVideo {
+    position: absolute; /* or 'fixed', 'relative', depending on use-case */
+    bottom: 30px;
+    right: 30px;
+  }
+  .styled-button {
+    background-color: ##cdd0c6; /* Bootstrap blue */
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .styled-end-button {
+    background-color: #add8e6;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .styled-button.clicked {
+    background-color: #3cb371; /* Green */
+  }
+
+  .button-container-right {
+    position: fixed; /* Or 'absolute' if you prefer relative to a positioned parent */
+    right: 30px; /* 20px from the right edge of the viewport */
+    top: 30px; /* 20px from the top edge of the viewport */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligns buttons to the start of the flex container (left-aligned within the container) */
+  }
+  .button-container-left {
+    position: fixed; /* Or 'absolute' if you prefer relative to a positioned parent */
+    left: 30px; /* 20px from the right edge of the viewport */
+    top: 30px; /* 20px from the top edge of the viewport */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligns buttons to the start of the flex container (left-aligned within the container) */
+  }
+</style>
+<div id="keypress-display" style="position: absolute; top: 30px; left: 800px; color: #333; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Key: None</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/TransformControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
+
+  <div class="button-container-right">
+    <button id="startButton" class="styled-button">Start Screen Recording</button>
+    <button id="stopButton" class="styled-button">Stop Screen Recording</button>
+    <button id="saveButton" class="styled-button">Save Screen Recording</button>
+  </div>
+  <div class="button-container-left">
+    <button id="recordWaypointButton" class="styled-button">Record Waypoint</button>
+    <button id="endDemoButton" class="styled-end-button">End Demo</button>
+  </div>
+  <video id="recordedVideo" controls></video>
+  <script>
+    let stream;
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+    const saveButton = document.getElementById('saveButton');
+    const recordedVideo = document.getElementById('recordedVideo');
+
+
+    startButton.addEventListener('click', async () => {
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = event => {
+          recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          recordedVideo.src = url;
+          recordedVideo.controls = true;
+
+          saveButton.style.display = 'inline-block';
+        };
+
+        mediaRecorder.start();
+
+        startButton.style.display = 'none';
+        stopButton.style.display = 'inline-block';
+      } catch (err) {
+        console.error('Error accessing screen capture:', err);
+      }
+    });
+
+    stopButton.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+
+        startButton.style.display = 'inline-block';
+        stopButton.style.display = 'none';
+      }
+    });
+
+    saveButton.addEventListener('click', () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'recorded-video.webm';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    });
+
+    var demoDone = false;
+
+    function handleEndButtonClick(button) {
+      demoDone = true; // Set the global variable to true
+      console.log('Finished demo', demoDone);
+      sendPositionAndOrientation();
+      button.classList.add('clicked'); // Change button color to green
+      demoDone = false;
+    }
+
+    document.querySelector('.styled-end-button').addEventListener('click', function() {
+      handleEndButtonClick(this);
+    });
+
+    // Setup scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const initialCameraPosition = new THREE.Vector3(0, 10, %s*10);
+    //const initialCameraLookAt = new THREE.Vector3(0, 0, 0);
+    const initialCameraLookAt = new THREE.Vector3(0, 0, 0);
+    camera.position.copy(initialCameraPosition);
+    camera.lookAt(initialCameraLookAt);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xffffff); // Set background color to white
+    document.body.appendChild(renderer.domElement);
+
+    // Add 3D axes
+    const axesHelper = new THREE.AxesHelper(5);
+    axesHelper.scale.set(2, 1.5, 1);
+    axesHelper.position.set(-3, 0, -4.75);
+    scene.add(axesHelper);
+
+    // To visualize clicked points
+    const cubeSize = 0.10;
+    const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Green color
+    const cubeMesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    cubeMesh.position.copy(new THREE.Vector3(-10, -10, -10));
+    scene.add(cubeMesh);
+
+
+    // Declare selectedObject variable
+    let selectedObject = null;
+    let transformControl = null;
+    let originalControl = null;
+    let isTranslationMode = true;
+    let isMouseDown = false;
+    let isShiftDown = false;
+    let isCtrlDown = false;
+    const controlPoints = [];
+    const meshUrls = [];
+    let intersectedPoint = null;
+
+    let rotationMode = false; // Track whether we are in rotation mode
+    let rotationAxis = null;
+    let currentAngleInput = '';
+
+    // Arrow Helper for showing direction
+    const arrowRadius = 0.6;
+    const arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 0), new THREE.Vector3(), 1.3, 0xFFA500, arrowRadius);
+    arrowHelper.visible = false; // Initially hidden
+    scene.add(arrowHelper);
+
+    // Cylinder creation and management
+    let guideCylinder = null;
+
+
+
+    function createGuideCylinder() {
+        const geometry = new THREE.CylinderGeometry(0.07, 0.07, 3, 32);
+        const material = new THREE.MeshBasicMaterial({color: 0xADD8E6, transparent: true, opacity: 0.5});
+        guideCylinder = new THREE.Mesh(geometry, material);
+        guideCylinder.visible = false; // Initially invisible
+        scene.add(guideCylinder);
+    }
+
+    // Call this function after scene initialization
+    createGuideCylinder();
+
+    // Function to update the cylinder's visibility, position, and orientation
+    function updateGuideCylinder(visible, axis) {
+        if (selectedObject && guideCylinder) {
+            guideCylinder.visible = visible;
+            if (visible) {
+                guideCylinder.position.copy(selectedObject.position);
+                guideCylinder.rotation.copy(selectedObject.rotation);
+            }
+        } else if (guideCylinder) {
+            guideCylinder.visible = false;
+        }
+    }
+
+    // Initialize point cloud
+    const numPoints = %s;  // Total number of points
+    const positions = new Float32Array(numPoints * 3); // Each point needs x, y, z
+    const colors = new Float32Array(numPoints * 3); // Each point needs r, g, b
+    const pointCloudGeometry = new THREE.BufferGeometry();
+    pointCloudGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    pointCloudGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); // Set colors attribute
+    const pointCloudMaterial = new THREE.PointsMaterial({
+        size: 0.1, // Adjust the size of the points
+        vertexColors: true, // Enable vertex colors
+    });
+    const pointCloud = new THREE.Points(pointCloudGeometry, pointCloudMaterial);
+    scene.add(pointCloud);
+
+
+    const numBoxes = 5000; // Number of boxes
+    const boxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1); // Small box size
+    //const boxMaterial = new THREE.MeshBasicMaterial({color: 0xff0000,  visible: true }); // Invisible material
+    const boxMaterial = new THREE.MeshBasicMaterial({visible: false }); // Invisible material
+    const instancedBoxes = new THREE.InstancedMesh(boxGeometry, boxMaterial, numBoxes);
+    // Add the instanced mesh to the scene
+    scene.add(instancedBoxes);
+
+    function updateInstancedMeshPositions() {
+      const positions = pointCloud.geometry.attributes.position;
+      //positions.needsUpdate = true; // Ensure the position attribute is updated
+
+      // Check if the number of instances exceeds the number of points
+      const actualInstances = Math.min(numBoxes, positions.count);
+
+      for (let i = 0; i < actualInstances; i++) {
+        const index = Math.floor(Math.random() * positions.count); // Randomly select new position index if needed
+        const matrix = new THREE.Matrix4();
+        const position = new THREE.Vector3(
+            positions.getX(index),
+            positions.getY(index),
+            positions.getZ(index)
+        );
+
+        matrix.setPosition(position);
+        instancedBoxes.setMatrixAt(i, matrix);
+      }
+
+    instancedBoxes.instanceMatrix.needsUpdate = true; // Important to apply changes
+  }
+
+    // Function to add object to scene
+    function addObject(obj, index, url) {
+      selectedObject = obj;
+      scene.add(selectedObject);
+      if (index == -1) {
+        controlPoints.push(selectedObject);
+        meshUrls.push(url);
+      } else {
+        controlPoints[index] = selectedObject;
+        meshUrls[index] = url;
+      }
+    }
+    document.addEventListener('mousemove', onMouseMove);
+
+    function updateCurvePath() {
+      // Ensure there are enough points to create a curve
+      if (controlPoints.length > 1) {
+        // Create or update the curve based on current control points' positions
+        curve = new THREE.CatmullRomCurve3(controlPoints.map(point => point.position));
+        const points = curve.getPoints(50); // Adjust the number of points as needed
+
+        // If path exists, update its geometry. Otherwise, create a new path.
+        if (path) {
+          path.geometry.dispose(); // Dispose of old geometry
+          path.geometry = new THREE.BufferGeometry().setFromPoints(points);
+        } else {
+          const pathGeometry = new THREE.BufferGeometry().setFromPoints(points);
+          const pathMaterial = new THREE.LineBasicMaterial({ color: 0xffa500 }); // Orange color
+          path = new THREE.Line(pathGeometry, pathMaterial);
+          scene.add(path);
+        }
+      } else if (path) {
+	  scene.remove(path);
+      }
+    }
+
+    // Function to load object
+    function loadObject(url, position, rotation, index) {
+      const loader = new THREE.OBJLoader();
+      loader.load(
+        url,
+        function (obj) {
+          obj.traverse(function (child) {
+            if (child instanceof THREE.Mesh) {
+              child.scale.set(6.85, 6.85, 6.85);
+              child.geometry.computeBoundingSphere();
+              child.geometry.computeBoundingBox();
+              child.position.copy(position); // Set object position
+              child.quaternion.setFromEuler(rotation);
+              addObject(child.clone(), index, url);
+            }
+          });
+        },
+        undefined,
+        function (error) {
+          console.error('Error loading object:', error);
+        }
+      );
+    }
+
+    const initialPos = %s;
+    const initialRot = %s;
+    const gripperName = %s;
+    let url = `http://localhost:8080/${gripperName}.obj`;
+    loadObject(url, initialPos, initialRot, -1);
+
+    // Create path curve
+    let curve;
+    let points;
+    let path;
+    setTimeout(() => {
+      curve = new THREE.CatmullRomCurve3(controlPoints.map(point => point.position));
+      points = curve.getPoints(50);
+      const pathGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      const pathMaterial = new THREE.LineBasicMaterial({ color: 0xffa500 }); // Orange color
+      path = new THREE.Line(pathGeometry, pathMaterial);
+      scene.add(path);
+    }, 1000); // Wait for objects to load
+
+
+    function getCameraLookAt(camera) {
+       const vector = new THREE.Vector3(0, 0, -1); // Default camera looks toward negative z
+       vector.applyQuaternion(camera.quaternion); // Apply rotation of camera to this vector
+       vector.add(camera.position); // Translate to camera position
+       return vector; // This is the current look-at position
+    }
+
+
+    // Event handler for mouse move
+    function onMouseMove(event) {
+      event.preventDefault();
+      if (transformControl != null) {
+        updateGuideCylinder(true, event.key);
+      } else if (isShiftDown) {
+        const rotationSpeed = 0.005;
+        const deltaX = event.movementX;
+        const deltaY = event.movementY;
+        const spherical = new THREE.Spherical().setFromVector3(camera.position);
+        spherical.theta -= rotationSpeed * deltaX;
+        spherical.phi -= rotationSpeed * deltaY;
+        spherical.makeSafe();
+        camera.position.setFromSpherical(spherical);
+        //camera.lookAt(initialCameraPosition - camera.position);
+        camera.lookAt(scene.position);
+      }
+    if (isMouseDown) {
+        if (selectedObject && isTranslationMode && !isShiftDown && !isCtrlDown && controlPoints.length > 1) {
+
+          const movementX = event.movementX;
+          const movementY = event.movementY;
+          const index = controlPoints.indexOf(selectedObject);
+          const point = controlPoints[index].position;
+
+          // Get the camera's right and up direction vectors
+          const right = new THREE.Vector3();
+          const up = new THREE.Vector3();
+          const forward = new THREE.Vector3();
+
+          camera.getWorldDirection(forward);
+          camera.up.normalize();
+          right.crossVectors(camera.up, forward).normalize();
+          up.crossVectors(forward, right).normalize();
+
+          // Transform movementX and movementY based on the camera's orientation
+          let mv = new THREE.Vector3();
+          mv.addScaledVector(right, -movementX);
+          mv.addScaledVector(up, -movementY);
+
+          console.log(mv);
+
+          // Check for key presses for 'x', 'y', 'z', 'p'
+          if (keys['x']) {
+            mv.y = 0; // Lock movement on Y-axis
+            mv.z = 0; // Lock movement on Z-axis
+            arrowHelper.setDirection(new THREE.Vector3(mv.x, 0, 0)); // Set arrow direction along X-axis
+            arrowHelper.visible = !(mv.x === 0 && mv.y === 0 && mv.z === 0); // Show arrow
+          } else if (keys['z']) {
+            let vert = mv.y;
+            mv.x = 0; // Lock movement on X-axis
+            mv.y = vert;
+            mv.z = 0; // Lock movement on Z-axis
+            arrowHelper.setDirection(new THREE.Vector3(0, mv.y, 0)); // Set arrow direction along Z-axis
+            arrowHelper.visible = !(mv.x === 0 && mv.y === 0 && mv.z === 0); // Show arrow
+          } else if (keys['p']) {
+            mv.y = 0; // Lock movement on Y-axis
+            arrowHelper.setDirection(new THREE.Vector3(mv.x, 0, mv.z)); // Set arrow direction along Y-axis
+            arrowHelper.visible = !(mv.x === 0 && mv.y === 0 && mv.z === 0); // Show arrow
+          } else if (keys['y']) {
+            mv.x = 0; // Lock movement on X-axis
+            mv.y = 0; // Lock movement on Y-axis
+            arrowHelper.setDirection(new THREE.Vector3(0, 0, mv.z)); // Set arrow direction along Y-axis
+            arrowHelper.visible = !(mv.x === 0 && mv.y === 0 && mv.z === 0); // Show arrow
+          } else {
+            arrowHelper.setDirection(new THREE.Vector3(0, 0, 0)); // Set arrow direction along Y-axis
+            arrowHelper.visible = false; // Hide arrow
+          }
+          arrowHelper.position.copy(point);
+          // Apply the movement vector
+          point.add(mv.multiplyScalar(0.006));
+          updateCurvePath();
+
+	} else if (!rotationMode && !isShiftDown && isCtrlDown) {
+          const movementX = event.movementX;
+          const movementY = event.movementY;
+          const cameraRight = new THREE.Vector3();
+          camera.getWorldDirection(cameraRight); // Get world direction facing the camera
+          cameraRight.cross(camera.up).normalize(); // Compute right direction relative to the camera
+          camera.position.addScaledVector(cameraRight, -movementX * 0.01);
+	      camera.position.addScaledVector(camera.up, movementY * 0.01);
+	}
+      }
+    }
+
+    // Event listener for mouse down
+    document.addEventListener('mousedown', function(event) {
+      isMouseDown = true;
+      selectObject(event);
+    });
+
+    // Event listener for mouse up
+    document.addEventListener('mouseup', function(event) {
+      isMouseDown = false;
+    });
+
+    // Boolean to track key state
+    let keys = {
+      x: false,
+      y: false,
+      z: false,
+    };
+
+    function moveSelectedObjectToPos(position) {
+      if (selectedObject) {
+        //let pos = new THREE.Vector3(0, 0.9, 0);
+        let pos = new THREE.Vector3(0, 0.7, 0);
+        pos.applyQuaternion(selectedObject.quaternion);
+        pos.x += position.x;
+        pos.y += position.y;
+        pos.z += position.z;
+        selectedObject.position.copy(pos);
+        updateCurvePath(); // Update the curve path after moving the object
+      }
+    }
+
+    // Function to select object
+
+    function selectObject(event) {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      selectedObject.geometry.computeBoundingSphere();
+      const boundingSphere = selectedObject.geometry.boundingSphere.clone();
+      const scaleFactor = 1.0; // Change this factor to increase or decrease the size of the sphere
+      boundingSphere.radius *= scaleFactor;
+      boundingSphere.applyMatrix4(selectedObject.matrixWorld);
+
+      if (raycaster.ray.intersectsSphere(boundingSphere)) {
+          console.log("Intersects with selectedObject's bounding sphere");
+          return;
+      }
+
+      if (isTranslationMode && controlPoints.length > 1) {
+        const intersects = raycaster.intersectObject(instancedBoxes, true);
+
+        if (intersects.length > 0) {
+          const instanceId = intersects[0].instanceId; // Get the instance ID
+          const instanceMatrix = new THREE.Matrix4();
+          instancedBoxes.getMatrixAt(instanceId, instanceMatrix);
+          const position = new THREE.Vector3();
+          position.setFromMatrixPosition(instanceMatrix);
+          console.log('Intersected instance at position:', position);
+          cubeMesh.position.copy(position); // Move the cubeMesh to the intersected box's position
+          moveSelectedObjectToPos(position);
+        }
+
+      }
+
+    }
+
+    // Establish WebSocket connection to the server
+    const recvSocket = new WebSocket('ws://localhost:8765');
+    const sendSocket = new WebSocket('ws://localhost:8766');
+
+    recvSocket.addEventListener('message', async function (event) {
+        // Decode the MessagePack data
+        const arrayBuffer = await event.data.arrayBuffer();
+        const data = msgpack.decode(new Uint8Array(arrayBuffer));
+
+        // Update pointcloud
+        const newPositions = data.positions;
+        const newColors = data.colors;
+
+        const pointCloudGeometry = pointCloud.geometry;
+        const positionAttribute = pointCloudGeometry.attributes.position;
+
+
+        // Check if the new data size is different
+        if (newPositions.length !== positionAttribute.array.length) {
+            // If different, create a new buffer
+            pointCloudGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(newPositions), 3));
+            pointCloudGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(newColors), 3));
+        } else {
+            // If same size, reuse the existing buffer
+            positionAttribute.array.set(new Float32Array(newPositions));
+            positionAttribute.needsUpdate = true;
+        }
+
+        // Update colors if necessary
+        if (newColors && pointCloudGeometry.attributes.color) {
+            const colorAttribute = pointCloudGeometry.attributes.color;
+            colorAttribute.array.set(new Float32Array(newColors));
+            colorAttribute.needsUpdate = true;
+        }
+
+        //pointCloudGeometry.attributes.position.array = new Float32Array(newPositions);
+        //pointCloudGeometry.attributes.position.needsUpdate = true; // Inform Three.js to update the buffer
+        //pointCloudGeometry.attributes.color.array = new Float32Array(newColors);
+        //pointCloudGeometry.attributes.color.needsUpdate = true; // Inform Three.js to update the buffer
+        updateInstancedMeshPositions();
+
+	const updateUI = data.update_ui;
+
+        // Update selectedObject
+        if (selectedObject && updateUI) {
+          // Set position to new received position
+          selectedObject.position.set(
+            data.fingertip_pos_ui[0],
+            data.fingertip_pos_ui[1],
+            data.fingertip_pos_ui[2]
+          );
+
+          // Set orientation to new received orientation
+          const euler = new THREE.Euler(
+            data.ee_euler_ui[0],
+            data.ee_euler_ui[2],
+            -1*data.ee_euler_ui[1],
+            'YZX' // order of rotations
+          );
+
+
+          const quaternion = new THREE.Quaternion().setFromEuler(euler);
+          selectedObject.quaternion.copy(quaternion);
+
+          // Change to gripper closed/open if necessary
+          const oldIndex = controlPoints.indexOf(selectedObject);
+          const url = meshUrls[oldIndex];
+          //console.log(url)
+          //console.log(data.gripper_action);
+          if ((url === `http://localhost:8080/${gripperName}_closed.obj` && !data.gripper_action[0]) || (url === `http://localhost:8080/${gripperName}.obj` && data.gripper_action[0])) {
+            let newUrl = '';
+            // Store position and rotation of selectedObject
+            const position = selectedObject.position.clone();
+            const rotation = selectedObject.rotation.clone();
+            if (url === `http://localhost:8080/${gripperName}_closed.obj`) {
+              newUrl = `http://localhost:8080/${gripperName}.obj`;
+            } else if (url === `http://localhost:8080/${gripperName}.obj`) {
+              newUrl = `http://localhost:8080/${gripperName}_closed.obj`;
+            }
+            scene.remove(selectedObject);
+            loadObject(newUrl, position, rotation, oldIndex);
+            updateCurvePath();
+          }
+	}
+     });
+
+    const recordWaypointButton = document.getElementById('recordWaypointButton');
+	recordWaypointButton.addEventListener('click', function() {
+	    sendPositionAndOrientation();
+    });
+
+    // Function to send position and orientation data of the selectedObject to the server
+    function sendPositionAndOrientation() {
+	  // Check if the WebSocket connection is open
+	  if (sendSocket.readyState === WebSocket.OPEN) {
+	    // Create an array to store data objects for each object
+	    const allObjectsData = [];
+
+	    // Iterate through each object in controlPoints array
+	    controlPoints.forEach((obj, index) => {
+	      // Get position and orientation of the object
+	      const position = obj.position;
+	      //const orientation = obj.rotation;
+	      const orientation_pre_transform = obj.rotation;
+	      const quaternion = new THREE.Quaternion().setFromEuler(obj.rotation);
+	      //const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'XZY');
+	      const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'YZX');
+	      const url = meshUrls[index];
+
+	      // Create data object for the current object and add it to the array
+	      const data = {
+            done: demoDone,
+            click: {
+                x: cubeMesh.position.x,
+                y: cubeMesh.position.y,
+                z: cubeMesh.position.z
+            },
+            position: {
+                x: position.x,
+                y: position.y,
+                z: position.z
+            },
+            orientation: {
+                x: orientation.x,
+                y: orientation.y,
+                z: orientation.z
+            },
+            url
+	      };
+	      allObjectsData.push(data);
+	    });
+
+	    // Send the array of data objects over the WebSocket connection as a single JSON object
+	    sendSocket.send(JSON.stringify(allObjectsData));
+	  } else {
+	    console.error('WebSocket connection is not open');
+	  }
+    }
+
+    // Add an event listener to handle WebSocket connection opening
+    recvSocket.addEventListener('open', function (event) {
+      console.log('Recv WebSocket connection opened');
+    });
+
+    sendSocket.addEventListener('open', function (event) {
+      console.log('Send WebSocket connection opened');
+    });
+
+
+    function rotateSelectedObject(axis, angle) {
+      switch (axis) {
+        case 'x':
+          selectedObject.rotateX(angle);
+          break;
+        case 'z':
+          selectedObject.rotateY(angle);
+          break;
+        case 'y':
+          selectedObject.rotateZ(angle);
+          break;
+        default:
+          console.log("Invalid axis");
+          return;
+      }
+      selectedObject.rotation.needsUpdate = true; // Ensure the object's rotation is updated
+    }
+
+    function setTopDownView() {
+      camera.position.set(0, 13, 0); // Adjust the Y-value as needed to suit the scale of your scene
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+      console.log("Camera set to top-down view.");
+    }
+
+    function setSideView() {
+      camera.position.set(0, 2, 13); // Adjust the Y-value as needed to suit the scale of your scene
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+      console.log("Camera set to top-down view.");
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Shift') {
+        isShiftDown = true;
+      } else if (event.key === 'Control') {
+        isCtrlDown = true;
+      } else if (event.key === 't') {
+        setTopDownView();
+      } else if (event.key === 's') {
+        setSideView();
+      }
+      keys[event.key.toLowerCase()] = true;
+      const displayElement = document.getElementById('keypress-display');
+        if (displayElement) {
+            if (event.key === 'r') {
+                displayElement.innerText = `[Rotation] Key: ${event.key}`;
+            } else if (event.key === 'g') {
+                displayElement.innerText = `[Toggle Gripper] Key: ${event.key}`;
+            } else if (event.key === 'p') {
+                displayElement.innerText = `[Translation]: Planar`;
+            } else {
+                displayElement.innerText = `[Translation] Key: ${event.key}`;
+            }
+            displayElement.style.opacity = 1;
+        }
+      if ((event.key === 'x' || event.key === 'y' || event.key === 'z' || event.key === 'p') && selectedObject) {
+        updateGuideCylinder(true, event.key);
+      }
+      if (event.key === 'Escape') {
+          event.preventDefault();
+          isTranslationMode = true;
+          rotationMode = false;
+          originalControl = null;
+          rotationAxis = null;
+          currentAngleInput = '';
+          if (transformControl) {
+            scene.remove(transformControl);
+            transformControl.detach();
+            transformControl.dispose();
+            transformControl = null;
+            document.addEventListener('mousemove', onMouseMove);
+          }
+      } else if (event.key === 'r') {
+        rotationMode = true;
+        isTranslationMode = false;
+        rotationAxis = null;
+        currentAngleInput = '';
+        console.log(rotationMode ? "Rotation mode enabled. Press 'x', 'y', or 'z' to choose axis, or rotate freely with the mouse." : "Rotation mode disabled.");
+
+        if (rotationMode && selectedObject) {
+          // Attach transform controls for rotation if not already initialized
+          if (!transformControl) {
+            transformControl = new THREE.TransformControls(camera, renderer.domElement);
+            transformControl.setSize(0.75);
+            scene.add(transformControl);
+          }
+          transformControl.attach(selectedObject);
+	  transformControl.setSpace('local');
+          transformControl.setMode("rotate");
+        } else {
+          if (transformControl) {
+            transformControl.detach();
+          }
+        }
+      } else if (event.key === 'Control') {
+	isTranslationMode = false;
+      }
+
+      // Handle axis selection and numerical input for manual rotation
+      if (rotationMode && selectedObject) {
+          // Check if the key is 'x', 'y', or 'z' for axis selection
+          if (['x', 'y', 'z'].includes(event.key)) {
+              rotationAxis = event.key;
+              currentAngleInput = '';  // Reset the angle input for new axis selection
+              console.log(`Axis '${rotationAxis}' selected. Enter a number to rotate, then press Enter.`);
+              // Detach transform controls to prepare for manual rotation input
+              if (transformControl) {
+                  transformControl.detach();
+              }
+          }
+      
+          // Capture numerical input for manual rotation (including negative sign and decimal point)
+          if (rotationAxis && (event.key >= '0' && event.key <= '9' || event.key === '-' || event.key === '.')) {
+              currentAngleInput += event.key;
+              console.log(`Current angle input: ${currentAngleInput} degrees. Press Enter to confirm.`);
+          }
+      
+          // Confirm rotation with Enter key for manual rotation
+          if (rotationAxis && event.key === 'Enter' && currentAngleInput.length > 0) {
+              const angle = parseFloat(currentAngleInput) * (Math.PI / 180); // Convert degrees to radians
+              rotateSelectedObject(rotationAxis, angle);
+              console.log(`Object rotated ${currentAngleInput} degrees around the ${rotationAxis} axis.`);
+              rotationMode = false;  // Exit rotation mode
+              rotationAxis = null;
+              currentAngleInput = '';  // Reset the input buffer
+              if (transformControl) {
+                  transformControl.attach(selectedObject); // Reattach transform controls after manual rotation
+                  transformControl.setSpace('local');
+              }
+          }
+      } else if (event.key === 'd') {
+          event.preventDefault();
+          if (selectedObject) {
+
+            const clone = selectedObject.clone();
+            const oldIndex = controlPoints.indexOf(selectedObject);
+
+            const url = meshUrls[oldIndex];
+
+            let pos = new THREE.Vector3(0, -0.5, 0);
+            pos.applyQuaternion(selectedObject.quaternion);
+            //console.log(pos);
+            clone.position.x += pos.x; // Move the clone 0.05 units to the right
+            clone.position.y += pos.y; // Move the clone 0.05 units to the right
+            clone.position.z += pos.z; // Move the clone 0.05 units to the right
+
+            clone.material = clone.material.clone();
+            clone.material.transparent = true;
+
+            //clone.position.x += 0.65; // Move the clone 0.05 units to the right
+            // Add the clone to the scene and controlPoints array
+            scene.add(clone);
+            controlPoints.push(clone);
+            meshUrls.push(url);
+            // Update the path if necessary
+            updateCurvePath();
+
+            // Optionally, make the clone the new selected object
+            selectedObject = clone;
+          }
+      } else if (event.key === 'g') {
+        event.preventDefault();
+        if (selectedObject) {
+          const oldIndex = controlPoints.indexOf(selectedObject);
+          const url = meshUrls[oldIndex];
+          let newUrl = '';
+          // Store position and rotation of selectedObject
+          const position = selectedObject.position.clone();
+          const rotation = selectedObject.rotation.clone();
+          console.log(rotation);
+          if (url === `http://localhost:8080/${gripperName}_closed.obj`) {
+            console.log("Loading OPEN mesh");
+            newUrl = `http://localhost:8080/${gripperName}.obj`;
+          } else if (url === `http://localhost:8080/${gripperName}.obj`) {
+            console.log("Loading CLOSED mesh");
+            newUrl = `http://localhost:8080/${gripperName}_closed.obj`;
+          }
+          scene.remove(selectedObject);
+          loadObject(newUrl, position, rotation, oldIndex);
+          updateCurvePath();
+        }
+      } else if (keys['f'] || keys['b']) {
+        updateGuideCylinder(true, event.key);
+        const direction = keys['f'] ? -2 : 2;
+        const movementSpeed = direction * 0.03;
+        const index = controlPoints.indexOf(selectedObject);
+        const point = controlPoints[index].position;
+        const movementVector = new THREE.Vector3(0, movementSpeed, 0);
+        movementVector.applyQuaternion(selectedObject.quaternion);
+        point.add(movementVector);
+        updateCurvePath();
+      } else if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+	if (selectedObject && controlPoints.length > 1) {
+          // Remove the selected object from controlPoints and meshUrls
+          scene.remove(selectedObject);
+	  controlPoints.pop();
+	  meshUrls.pop();
+          // Optionally, update the curve path if needed
+          updateCurvePath();
+          if (controlPoints.length > 0) {
+            selectedObject = controlPoints[controlPoints.length - 1];
+          } else {
+            selectedObject = null;
+          }
+        }
+    }
+    });
+
+    document.addEventListener('keyup', function(event) {
+      const displayElement = document.getElementById('keypress-display');
+      if (displayElement) {
+          displayElement.style.opacity = 0; // Fade out
+      }
+      if (event.key === "Control") {
+        isCtrlDown = false;
+	isTranslationMode = true;
+      } else if (event.key === 'Shift') {
+        isShiftDown = false;
+      }
+      updateGuideCylinder(false);
+      keys[event.key.toLowerCase()] = false;
+      arrowHelper.visible = false;
+      });
+
+    function onWheel(event) {
+      event.preventDefault();
+      // Linear Zooming: Move along the camera's look-at vector
+      const zoomSpeed = 0.3;
+      const zoomDirection = event.deltaY < 0 ? 1 : -1; // Determine zoom direction based on scroll direction
+      const cameraDirection = new THREE.Vector3().subVectors(scene.position, camera.position).normalize(); // Get normalized direction vector from camera to target
+      const zoomAmount = zoomDirection * zoomSpeed;
+
+      camera.position.addScaledVector(cameraDirection, zoomAmount); // Move camera along direction vector
+      camera.lookAt(scene.position); // Ensure the camera keeps looking at the scene center
+    }
+
+    document.addEventListener('wheel', onWheel, { passive: false });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>

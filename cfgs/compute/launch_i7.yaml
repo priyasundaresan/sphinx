@@ -1,0 +1,5 @@
+cpus: 12
+mem: 60gb
+gpus: 1
+nodelist: iliad7
+time: 7200

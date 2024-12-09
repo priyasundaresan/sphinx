@@ -1,0 +1,5 @@
+cpus: 6
+mem: 24gb
+gpus: 1
+gpu_type: titanrtx
+time: 720
