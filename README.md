@@ -92,10 +92,10 @@ Our real setup has a Franka Panda FR3 mounted on a table with calibrated RealSen
 
 We use a workstation to run all scripts which talks to an Intel NUC running a Polymetis controller for the robot and gripper.
 
-### Starting up the Robot & Gripper
+### Starting up the Robot & Gripper [On NUC]
 Install the [monometis](https://github.com/hengyuan-hu/monometis.git) repo.
 
-#### Launch the robot/gripper server
+#### Launch the robot/gripper server [On NUC]
 After going to `172.16.0.2` on the workstation, unlocking the robot, and activating FCI, do the following on NUC:
 ```shell
 # robot
@@ -104,14 +104,14 @@ cd launcher; conda activate robo; ./launch_robot.sh
 # gripper
 cd launcher; conda activate robo; ./launch_gripper.sh
 ```
-#### Start the controller (for receving / executing waypoint/dense actions)
-Clone this repo to the NUC
+#### Start the controller (for receving / executing waypoint/dense actions) [On NUC]
+Clone & install  this repo on the NUC 
 ```shell
 conda activate robo
 python envs/minrobot/server.py
 ```
 
-### Data Collection in Real
+### Data Collection in Real [On Workstation]
 NOTE: Assumes you have started the robot/gripper as above on the NUC.
 The below commands are all run on the workstation, assuming you have cloned the repo and created the conda env.
 
@@ -123,7 +123,7 @@ python interactive_scripts/record_demo.py
 
 ### Training/Evaling SPHINX
 
-#### Training
+#### Training 
 To train SPHINX on a given task (i.e. coffee)
 Download the coffee dataset from [Google Drive](https://drive.google.com/drive/folders/1283M3vPEYml87Y-N8Ievvv3XAVt7iHu6?usp=sharing) and put it under the `data` folder (i.e. you should have `data/coffee`).
 ```shell
@@ -131,7 +131,7 @@ python scripts/train_waypoint.py --config cfgs/waypoint/coffee.yaml
 python scripts/train_dense.py --config cfgs/dense/dp_coffee.yaml
 ```
 
-#### Eval
+#### Eval [On Workstation]
 Assuming the resulting checkpoints are saved to `exps/dense/coffee` and `exps/waypoint/coffee`, to eval SPHINX:
 ```shell
 python scripts/eval_sphinx.py --dense_weight exps/dense/coffee --waypoint_weight exps/waypoint/coffee --env_cfg_path envs/fr3.yaml --freq 10
