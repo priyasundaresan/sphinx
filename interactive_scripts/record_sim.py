@@ -385,6 +385,7 @@ def main():
     mp.set_start_method('fork')  # compatibility on mac
 
     common_utils.kill_process_on_port(8765)
+    common_utils.kill_process_on_port(8766)
 
     robot = InteractiveBot(
         args.task,
