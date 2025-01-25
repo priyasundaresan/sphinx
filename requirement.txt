@@ -131,3 +131,6 @@ websockets==13.1
 werkzeug==3.0.4
 widgetsnbextension==4.0.13
 zipp==3.20.2
+# not included
+rich
+pyyaml

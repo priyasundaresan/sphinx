@@ -15,6 +15,9 @@ data/gdino_objects.png
 data/temp_rgb.png
 data/*
 
+pal_log/
+
+
 # wandb
 wandb/
 exps/
