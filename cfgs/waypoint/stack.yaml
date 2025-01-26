@@ -1,0 +1,20 @@
+dataset:
+  path: data/stack
+  repeat: 20
+  use_dist: 1
+  aug_translate: 1
+  aug_interpolate: 0.2
+eval_per_epoch: 10
+num_eval_episode: 50
+epoch: 30
+train_split: all
+num_workers: 2
+waypoint:
+  preset: small
+  custom_init: 0
+  drop: 0.1
+  topk_train: 0
+batch_size: 64
+cosine_schedule: 1
+use_wb: 1
+use_ema: 1

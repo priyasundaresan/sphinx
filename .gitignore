@@ -15,8 +15,8 @@ data/gdino_objects.png
 data/temp_rgb.png
 data/*
 
-pal_log/
-
+# pal_log/
+eval_sim_record/
 
 # wandb
 wandb/
