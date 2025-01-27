@@ -76,31 +76,10 @@ python scripts/train_dp3.py --config_path cfgs/dense/dp3_<square/can>.yaml
 (NOTE: We provide a mac_env.yml if you'd like to create a Mac-compatible environment to run our data collection interface)
 
 In sim, we provide a script to allow you to try waypoint-mode data collection for the RoboMimic can/square environments (square by default). This is what was used to collect the provided `square` and `can` datasets. See this [Google Doc](https://docs.google.com/document/d/1mpHAVoCbp7k2y1qc_WS0c4HW7EAOpovFvp6tYPP46hI/edit?usp=sharing) for a walkthrough on how to use the UI.
-
-### First-time Setup
-1. Run the robosuite setup script (required for new conda environments):
-```shell
-python $(which python -c "import robosuite; print(robosuite.__path__[0])")/scripts/setup_macros.py
-```
-
-### Running the Interface
-1. Make sure no processes are using the required ports:
-```shell
-sudo lsof -ti:8080,8765,8766 | xargs kill -9
-```
-
-2. Set the DISPLAY environment variable if not already set:
-```shell
-export DISPLAY=:0
-```
-
-3. Run the recording script:
 ```shell
 source set_env.sh
 python interactive_scripts/record_sim.py
 ```
-
-4. Open your web browser and navigate to `http://localhost:8080` to access the interface
 ![Interface Demo](assets/interface.gif)
 
 ## Real Deployment

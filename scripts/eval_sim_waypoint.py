@@ -29,9 +29,9 @@ def eval_waypoint(
     else:
         assert False, "please define eval len"
 
-    env = RobomimicEnv(env_cfg, verbose=False, on_screen_render=True)
+    env = RobomimicEnv(env_cfg, verbose=False, on_screen_render=False)
     np.random.seed(seed)
-    env.reset(render=True)
+    env.reset(render=False)
 
     recorder = None
     if record:
@@ -54,7 +54,7 @@ def eval_waypoint(
             num_pass=num_pass,
         )
         prev_num_step = env.num_step
-        env.move_to(pos_cmd, euler_cmd, float(gripper_cmd), render=True)
+        env.move_to(pos_cmd, euler_cmd, float(gripper_cmd), render=False)
         if env.num_step == prev_num_step:
             freeze_counter += 1
         else:
@@ -116,8 +116,8 @@ def main():
     parser.add_argument("--num_episode", type=int, default=10)
     parser.add_argument("--topk", type=int, default=-1)
     parser.add_argument("--num_pass", type=int, default=3)
-    parser.add_argument("--save_dir", type=str, default="eval_sim_record")
-    parser.add_argument("--record", type=int, default=1)
+    parser.add_argument("--save_dir", type=str, default=None)
+    parser.add_argument("--record", type=int, default=0)
     args = parser.parse_args()
 
     if args.save_dir is not None:
