@@ -384,6 +384,7 @@ def main():
     np.set_printoptions(precision=4, linewidth=100, suppress=True)
     mp.set_start_method('fork')  # compatibility on mac
 
+    common_utils.kill_process_on_port(8766)
     common_utils.kill_process_on_port(8765)
 
     robot = InteractiveBot(

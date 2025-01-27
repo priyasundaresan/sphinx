@@ -16,7 +16,7 @@ git clone https://github.com/priyasundaresan/sphinx.git
 
 First create a conda env:
 ```shell
-conda env create -f linux_env.yml  
+conda env create -f linux_env.yml
 ```
 
 Then, source `set_env.sh` to activate the `sphinx_env` conda env and set the `PYTHONPATH` appropriately.
@@ -80,7 +80,22 @@ In sim, we provide a script to allow you to try waypoint-mode data collection fo
 source set_env.sh
 python interactive_scripts/record_sim.py
 ```
+
+Open your web browser and navigate to `http://localhost:8080` to access the interface
+
 ![Interface Demo](assets/interface.gif)
+
+#### Trouble Shooting
+
+* Make sure no processes are using the required ports:
+```shell
+sudo lsof -ti:8080,8765,8766 | xargs kill -9
+```
+
+* Set the DISPLAY environment variable if not already set:
+```shell
+export DISPLAY=:0
+```
 
 ## Real Deployment
 As always:
@@ -105,7 +120,7 @@ cd launcher; conda activate robo; ./launch_robot.sh
 cd launcher; conda activate robo; ./launch_gripper.sh
 ```
 #### Start the controller (for receving / executing waypoint/dense actions) [On NUC]
-Clone & install  this repo on the NUC 
+Clone & install  this repo on the NUC
 ```shell
 conda activate robo
 python envs/minrobot/server.py
@@ -123,7 +138,7 @@ python interactive_scripts/record_demo.py
 
 ### Training/Evaling SPHINX
 
-#### Training 
+#### Training
 To train SPHINX on a given task (i.e. coffee)
 Download the coffee dataset from [Google Drive](https://drive.google.com/drive/folders/1283M3vPEYml87Y-N8Ievvv3XAVt7iHu6?usp=sharing) and put it under the `data` folder (i.e. you should have `data/coffee`).
 ```shell
