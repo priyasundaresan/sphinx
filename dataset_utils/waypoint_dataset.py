@@ -196,6 +196,7 @@ class PointCloudDatasetConfig:
         PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
         DATASETS = {
             "square": os.path.join(PROJECT_ROOT, "data/square"),
+            "stack": os.path.join(PROJECT_ROOT, "data/stack"),
             "can": os.path.join(PROJECT_ROOT, "data/can"),
             "coffee": os.path.join(PROJECT_ROOT, "data/coffee"),
             "drawer": os.path.join(PROJECT_ROOT, "data/drawer"),
@@ -372,9 +373,9 @@ class PointCloudDataset(Dataset):
 
 def main():
     cfg = PointCloudDatasetConfig(
-        path="data/drawer_new2",
-        is_real=1,
-        aug_interpolate=0,
+        path="data/stack",
+        is_real=0,
+        aug_interpolate=0.2,
         aug_translate=0,
         aug_rotate=0,
         use_dist=1,

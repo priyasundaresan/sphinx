@@ -52,6 +52,14 @@ class InteractiveBot:
                 record_sim_state=1,
                 crop_table=1,
             )
+        elif task == "stack":
+            cfg = RobomimicEnvConfig(
+                name="Stack",
+                cameras=["agentview", "robot0_eye_in_hand", "sideview"],
+                max_len=3000,
+                record_sim_state=1,
+                crop_table=1,
+            )
         else:
             assert False, f"unknown task {task}"
 

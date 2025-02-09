@@ -26,6 +26,10 @@ def eval_waypoint(
         env_cfg.max_len = 300
     elif env_cfg.name == "PickPlaceCan":
         env_cfg.max_len = 200
+    elif env_cfg.name == "Square":
+        env_cfg.max_len = 200
+    elif env_cfg.name == "Stack":
+        env_cfg.max_len = 200
     else:
         assert False, "please define eval len"
 
