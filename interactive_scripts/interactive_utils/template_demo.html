@@ -88,6 +88,26 @@
   <div class="button-container-left">
     <button id="recordWaypointButton" class="styled-button">Record Waypoint</button>
     <button id="endDemoButton" class="styled-end-button">End Demo</button>
+    <button id="helpButton" class="styled-button" style="
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 40px;
+      height: 40px;
+      font-size: 22px;
+      border-radius: 50%%;
+      padding: 0;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      background-color: #f0f0f0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      z-index: 1001;
+    ">?</button>
+  </div>
+  <div id="waypoint-message" style="position: absolute; top: 30px; left: 215px; color: green; background: rgba(255,255,255,0.95); padding: 10px 15px; border-radius: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s ease-in-out;">
+    Waypoint Added!
   </div>
   <video id="recordedVideo" controls></video>
   <script>
@@ -151,6 +171,8 @@
       document.body.removeChild(a);
     });
 
+    document.getElementById('helpButton').addEventListener('click', showHelpModal);
+
     var demoDone = false;
 
     function handleEndButtonClick(button) {
@@ -160,6 +182,47 @@
       button.classList.add('clicked'); // Change button color to green
       demoDone = false;
     }
+
+    function autoDuplicateFirstGripper() {
+      if (selectedObject && controlPoints.indexOf(selectedObject) === 0) {
+        const clone = selectedObject.clone();
+        const url = meshUrls[0];
+
+        let pos = new THREE.Vector3(0, -0.5, 0);
+        pos.applyQuaternion(selectedObject.quaternion);
+
+        clone.position.x += pos.x;
+        clone.position.y += pos.y;
+        clone.position.z += pos.z;
+
+        clone.material = clone.material.clone();
+        clone.material.transparent = true;
+
+        scene.add(clone);
+        controlPoints.push(clone);
+        meshUrls.push(url);
+
+        selectedObject = clone;
+        updateCurvePath();
+      }
+    }
+
+    function showWaypointMessage() {
+      const message = document.getElementById('waypoint-message');
+      message.style.opacity = 1;
+      setTimeout(() => {
+        message.style.opacity = 0;
+      }, 1000); // Show for 1 second
+    }
+
+    function showHelpModal() {
+      document.getElementById("help-modal").style.display = "block";
+    }
+
+    function closeHelpModal() {
+      document.getElementById("help-modal").style.display = "none";
+    }
+    
 
     document.querySelector('.styled-end-button').addEventListener('click', function() {
       handleEndButtonClick(this);
@@ -322,7 +385,7 @@
           scene.add(path);
         }
       } else if (path) {
-	  scene.remove(path);
+    scene.remove(path);
       }
     }
 
@@ -396,6 +459,7 @@
         camera.lookAt(scene.position);
       }
     if (isMouseDown) {
+        autoDuplicateFirstGripper();
         if (selectedObject && isTranslationMode && !isShiftDown && !isCtrlDown && controlPoints.length > 1) {
 
           const movementX = event.movementX;
@@ -451,15 +515,15 @@
           point.add(mv.multiplyScalar(0.006));
           updateCurvePath();
 
-	} else if (!rotationMode && !isShiftDown && isCtrlDown) {
+  } else if (!rotationMode && !isShiftDown && isCtrlDown) {
           const movementX = event.movementX;
           const movementY = event.movementY;
           const cameraRight = new THREE.Vector3();
           camera.getWorldDirection(cameraRight); // Get world direction facing the camera
           cameraRight.cross(camera.up).normalize(); // Compute right direction relative to the camera
           camera.position.addScaledVector(cameraRight, -movementX * 0.01);
-	      camera.position.addScaledVector(camera.up, movementY * 0.01);
-	}
+        camera.position.addScaledVector(camera.up, movementY * 0.01);
+  }
       }
     }
 
@@ -573,7 +637,7 @@
         //pointCloudGeometry.attributes.color.needsUpdate = true; // Inform Three.js to update the buffer
         updateInstancedMeshPositions();
 
-	const updateUI = data.update_ui;
+  const updateUI = data.update_ui;
 
         // Update selectedObject
         if (selectedObject && updateUI) {
@@ -615,34 +679,36 @@
             loadObject(newUrl, position, rotation, oldIndex);
             updateCurvePath();
           }
-	}
+  }
      });
 
     const recordWaypointButton = document.getElementById('recordWaypointButton');
-	recordWaypointButton.addEventListener('click', function() {
-	    sendPositionAndOrientation();
+    recordWaypointButton.addEventListener('click', function() {
+        sendPositionAndOrientation();
+        showWaypointMessage();
     });
+
 
     // Function to send position and orientation data of the selectedObject to the server
     function sendPositionAndOrientation() {
-	  // Check if the WebSocket connection is open
-	  if (sendSocket.readyState === WebSocket.OPEN) {
-	    // Create an array to store data objects for each object
-	    const allObjectsData = [];
+    // Check if the WebSocket connection is open
+    if (sendSocket.readyState === WebSocket.OPEN) {
+      // Create an array to store data objects for each object
+      const allObjectsData = [];
 
-	    // Iterate through each object in controlPoints array
-	    controlPoints.forEach((obj, index) => {
-	      // Get position and orientation of the object
-	      const position = obj.position;
-	      //const orientation = obj.rotation;
-	      const orientation_pre_transform = obj.rotation;
-	      const quaternion = new THREE.Quaternion().setFromEuler(obj.rotation);
-	      //const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'XZY');
-	      const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'YZX');
-	      const url = meshUrls[index];
+      // Iterate through each object in controlPoints array
+      controlPoints.forEach((obj, index) => {
+        // Get position and orientation of the object
+        const position = obj.position;
+        //const orientation = obj.rotation;
+        const orientation_pre_transform = obj.rotation;
+        const quaternion = new THREE.Quaternion().setFromEuler(obj.rotation);
+        //const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'XZY');
+        const orientation = new THREE.Euler().setFromQuaternion(quaternion, 'YZX');
+        const url = meshUrls[index];
 
-	      // Create data object for the current object and add it to the array
-	      const data = {
+        // Create data object for the current object and add it to the array
+        const data = {
             done: demoDone,
             click: {
                 x: cubeMesh.position.x,
@@ -660,15 +726,15 @@
                 z: orientation.z
             },
             url
-	      };
-	      allObjectsData.push(data);
-	    });
+        };
+        allObjectsData.push(data);
+      });
 
-	    // Send the array of data objects over the WebSocket connection as a single JSON object
-	    sendSocket.send(JSON.stringify(allObjectsData));
-	  } else {
-	    console.error('WebSocket connection is not open');
-	  }
+      // Send the array of data objects over the WebSocket connection as a single JSON object
+      sendSocket.send(JSON.stringify(allObjectsData));
+    } else {
+      console.error('WebSocket connection is not open');
+    }
     }
 
     // Add an event listener to handle WebSocket connection opening
@@ -738,6 +804,11 @@
       if ((event.key === 'x' || event.key === 'y' || event.key === 'z' || event.key === 'p') && selectedObject) {
         updateGuideCylinder(true, event.key);
       }
+      if (event.key === '?') {
+        showHelpModal();
+      } else if (event.key === 'Escape') {
+        closeHelpModal();  // Closes help or exits rotation
+      }
       if (event.key === 'Escape') {
           event.preventDefault();
           isTranslationMode = true;
@@ -767,7 +838,7 @@
             scene.add(transformControl);
           }
           transformControl.attach(selectedObject);
-	  transformControl.setSpace('local');
+    transformControl.setSpace('local');
           transformControl.setMode("rotate");
         } else {
           if (transformControl) {
@@ -775,7 +846,7 @@
           }
         }
       } else if (event.key === 'Control') {
-	isTranslationMode = false;
+  isTranslationMode = false;
       }
 
       // Handle axis selection and numerical input for manual rotation
@@ -873,11 +944,11 @@
         updateCurvePath();
       } else if (event.key === 'Backspace' || event.key === 'Delete') {
         event.preventDefault();
-	if (selectedObject && controlPoints.length > 1) {
+  if (selectedObject && controlPoints.length > 1) {
           // Remove the selected object from controlPoints and meshUrls
           scene.remove(selectedObject);
-	  controlPoints.pop();
-	  meshUrls.pop();
+    controlPoints.pop();
+    meshUrls.pop();
           // Optionally, update the curve path if needed
           updateCurvePath();
           if (controlPoints.length > 0) {
@@ -896,7 +967,7 @@
       }
       if (event.key === "Control") {
         isCtrlDown = false;
-	isTranslationMode = true;
+  isTranslationMode = true;
       } else if (event.key === 'Shift') {
         isShiftDown = false;
       }
@@ -925,5 +996,51 @@
     }
     animate();
   </script>
+<div id="help-modal" style="
+display: none;
+position: fixed;
+top: 10%%;
+left: 50%%;
+transform: translateX(-50%%);
+width: 700px;
+max-height: 80vh;
+overflow-y: auto;
+background: white;
+border-radius: 12px;
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+padding: 20px;
+font-family: 'Segoe UI', Tahoma, sans-serif;
+z-index: 1000;
+">
+<h2 style="margin-top: 0;">Keyboard Shortcuts</h2>
+<ul style="font-size: 15px; line-height: 1.6;">
+  <li><b>g</b> – Toggle gripper open/closed</li>
+  <li><b>d</b> – Clone gripper (must do before editing)</li>
+  <li><b>Backspace / Delete</b> – Remove last gripper clone</li>
+  <li><b>f</b> – Move forward along gripper axis</li>
+  <li><b>b</b> – Move backward</li>
+  <li><b>x/y/z</b> – Lock translation to axis while dragging</li>
+  <li><b>p</b> – Lock to planar (x/z) translation</li>
+  <li><b>r</b> – Enter rotation mode</li>
+  <li><b>Escape</b> – Exit rotation mode / Close help</li>
+  <li><b>rx90</b> – Rotate around X by 90 degrees (same for y/z)</li>
+  <li><b>Click</b> – Move gripper near clicked point</li>
+  <li><b>t</b> – Top-down camera view</li>
+  <li><b>s</b> – Side camera view</li>
+  <li><b>Shift + Drag</b> – Pan view</li>
+  <li><b>Scroll</b> – Zoom in/out</li>
+  <li><b>?</b> – Show this help menu</li>
+</ul>
+<button onclick="closeHelpModal()" style="
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  background: #eee;
+  cursor: pointer;
+">Close</button>
+</div>
 </body>
 </html>
+
